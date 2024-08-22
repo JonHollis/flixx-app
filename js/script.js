@@ -44,7 +44,7 @@ async function displayPopularShows() {
     const div = document.createElement("div");
     div.classList.add("card");
     div.innerHTML = `      
-    <a href="movie-details.html?id=${show.id}">
+    <a href="tv-details.html?id=${show.id}">
     ${
       show.poster_path
         ? `      <img
@@ -76,7 +76,8 @@ async function displayMovieDetails() {
 
   const movieDetails = await fetchAPIData(`movie/${movieId}`);
 
-  console.log(movieDetails);
+  // background
+  displayBackgroundImage("movie", movieDetails.backdrop_path);
 
   const div = document.createElement("div");
   div.innerHTML = `
@@ -136,11 +137,102 @@ async function displayMovieDetails() {
           </ul>
           <h4>Production Companies</h4>
           <div class="list-group">${movieDetails.production_companies.map(
-            (company) => ` ${company.name}`
+            (company) => ` <span>${company.name}</span>`
           )}</div>
         </div>
   `;
   document.querySelector("#movie-details").appendChild(div);
+}
+
+// display TV show details
+async function displayShowDetails() {
+  const showId = window.location.search.split("id=")[1];
+
+  const show = await fetchAPIData(`tv/${showId}`);
+
+  // background
+  displayBackgroundImage("show", show.backdrop_path);
+
+  const div = document.createElement("div");
+  div.innerHTML = `
+          <div class="details-top">
+          <div>
+
+    ${
+      show.poster_path
+        ? `      <img
+        src="https://image.tmdb.org/t/p/w500${show.poster_path}"
+        class="card-img-top"
+        alt="${show.name}"
+      />`
+        : `  <img
+  src="images/no-image.jpg"
+  class="card-img-top"
+  alt=""
+/>`
+    }
+          </div>
+          <div>
+            <h2>${show.name}</h2>
+            <p>
+              <i class="fas fa-star text-primary"></i>
+              ${show.vote_average.toFixed(1)} / 10
+            </p>
+            <p class="text-muted">Release Date: ${show.release_date}</p>
+            <p>
+              ${show.overview}
+            </p>
+            <h5>Genres</h5>
+            <ul class="list-group">
+            ${show.genres.map((genre) => `<li>${genre.name}</li>`).join("")}
+            </ul>
+            <a href="${
+              show.homepage
+            }" target="_blank" class="btn">Visit Show Homepage</a>
+          </div>
+        </div>
+        <div class="details-bottom">
+          <h2>Show Info</h2>
+          <ul>
+            <li><span class="text-secondary">Number Of Episodes:</span> ${
+              show.number_of_episodes
+            }</li>
+            <li>
+              <span class="text-secondary">Last Episode To Air:</span> ${
+                show.last_air_date
+              }
+            </li>
+            <li><span class="text-secondary">Status:</span> ${show.status}</li>
+          </ul>
+          <h4>Production Companies</h4>
+          <div class="list-group">${show.production_companies.map(
+            (company) => ` <span>${company.name}</span>`
+          )}</div>
+        </div>
+  `;
+  document.querySelector("#show-details").appendChild(div);
+}
+
+// display details pages background
+function displayBackgroundImage(type, backgroundPath) {
+  const overlayDiv = document.createElement("div");
+  overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${backgroundPath})`;
+  overlayDiv.style.backgroundSize = "cover";
+  overlayDiv.style.backgroundPosition = "center";
+  overlayDiv.style.backgroundRepeat = "no-repeat";
+  overlayDiv.style.height = "100vh";
+  overlayDiv.style.width = "100vw";
+  overlayDiv.style.position = "absolute";
+  overlayDiv.style.top = "0";
+  overlayDiv.style.left = "0";
+  overlayDiv.style.zIndex = "-1";
+  overlayDiv.style.opacity = "0.1";
+
+  if (type === "movie") {
+    document.querySelector("#movie-details").appendChild(overlayDiv);
+  } else {
+    document.querySelector("#show-details").appendChild(overlayDiv);
+  }
 }
 
 // Fetch data from TMDB API
@@ -170,7 +262,6 @@ function hideSpinner() {
 function highlightActiveLink() {
   const links = document.querySelectorAll(".nav-link");
   links.forEach((link) => {
-    console.log(link.getAttribute("href"));
     if (link.getAttribute("href") === global.currentPage) {
       link.classList.add("active");
     }
@@ -196,11 +287,10 @@ function init() {
 
     case "/movie-details.html":
       displayMovieDetails();
-      console.log("Movie Details");
       break;
 
     case "/tv-details.html":
-      console.log("TV Details");
+      displayShowDetails();
       break;
 
     case "/search.html":
